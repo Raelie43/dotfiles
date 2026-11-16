@@ -1,0 +1,28 @@
+# Generated from PALETTE.md
+[colors.primary]
+background = "#030C17"
+foreground = "#D8D5CC"
+[colors.cursor]
+text = "#030C17"
+cursor = "#60B9C5"
+[colors.selection]
+text = "#D8D5CC"
+background = "#1C394E"
+[colors.normal]
+black = "#0C2030"
+red = "#E18B91"
+green = "#83C6AE"
+yellow = "#CDBB85"
+blue = "#69A9E8"
+magenta = "#559DDB"
+cyan = "#63CEC6"
+white = "#B8CCD9"
+[colors.bright]
+black = "#718FA5"
+red = "#EFABB0"
+green = "#A5DCC8"
+yellow = "#E5D4A2"
+blue = "#98C7EF"
+magenta = "#85B9E2"
+cyan = "#91DFD7"
+white = "#D8D5CC"

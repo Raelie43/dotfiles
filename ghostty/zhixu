@@ -1,0 +1,24 @@
+# Zhixu — Everything in its place. Colors from ../PALETTE.md.
+background = #101112
+foreground = #E3DCD3
+cursor-color = #DDB08C
+cursor-text = #101112
+selection-background = #43382F
+selection-foreground = cell-foreground
+
+palette = 0=#25282C
+palette = 1=#D49A91
+palette = 2=#A8CAA0
+palette = 3=#DDB08C
+palette = 4=#91ADC7
+palette = 5=#B8ACD4
+palette = 6=#91BEBB
+palette = 7=#E3DCD3
+palette = 8=#8295A3
+palette = 9=#E2ADA3
+palette = 10=#BEDBB6
+palette = 11=#E9C49D
+palette = 12=#ABC5DC
+palette = 13=#CEBEE7
+palette = 14=#ABD5D1
+palette = 15=#F0E9E1

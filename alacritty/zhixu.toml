@@ -1,0 +1,69 @@
+# Zhixu — Everything in its place. Colors from ../PALETTE.md.
+
+[window]
+opacity = 1.0
+
+[colors]
+draw_bold_text_with_bright_colors = false
+
+[colors.primary]
+background = "#101112"
+foreground = "#E3DCD3"
+dim_foreground = "#9B8D80"
+bright_foreground = "#F0E9E1"
+
+[colors.cursor]
+text = "#101112"
+cursor = "#DDB08C"
+
+[colors.vi_mode_cursor]
+text = "#101112"
+cursor = "#DDB08C"
+
+[colors.selection]
+text = "CellForeground"
+background = "#43382F"
+
+[colors.search.matches]
+foreground = "#E3DCD3"
+background = "#2F2924"
+
+[colors.search.focused_match]
+foreground = "#E3DCD3"
+background = "#624732"
+
+[colors.hints.start]
+foreground = "#101112"
+background = "#DDB08C"
+
+[colors.hints.end]
+foreground = "#E3DCD3"
+background = "#43382F"
+
+[colors.footer_bar]
+foreground = "#CFC3B7"
+background = "#1A1C1E"
+
+[colors.line_indicator]
+foreground = "#CFC3B7"
+background = "#1A1C1E"
+
+[colors.normal]
+black = "#25282C"
+red = "#D49A91"
+green = "#A8CAA0"
+yellow = "#DDB08C"
+blue = "#91ADC7"
+magenta = "#B8ACD4"
+cyan = "#91BEBB"
+white = "#E3DCD3"
+
+[colors.bright]
+black = "#8295A3"
+red = "#E2ADA3"
+green = "#BEDBB6"
+yellow = "#E9C49D"
+blue = "#ABC5DC"
+magenta = "#CEBEE7"
+cyan = "#ABD5D1"
+white = "#F0E9E1"
