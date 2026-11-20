@@ -72,9 +72,6 @@ vim.api.nvim_create_autocmd("FileType", {
 
 		vim.opt_local.formatoptions:remove({ "c", "r", "o" })
 
-		vim.opt_local.makeprg = "vale --output=line --no-wrap %"
-		vim.opt_local.errorformat = "%f:%l:%c:%m"
-
 		-- Visual line navigation
 		vim.keymap.set("n", "j", "gj", { buffer = true })
 		vim.keymap.set("n", "k", "gk", { buffer = true })
