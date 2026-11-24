@@ -91,131 +91,150 @@
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(package-initialize)
-(unless package-archive-contents
-  (package-refresh-contents))
+;; (unless package-archive-contents
+;;   (package-refresh-contents))
+
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file 'noerror)
+
+
+(setq auth-sources '("~/.authinfo.gpg")
+      epa-file-encrypt-to '("raelie@fastmail.co.uk"))
 
 ;; ---------- Interface ----------
 (setq inhibit-startup-message t
       initial-scratch-message nil
       ring-bell-function 'ignore
-      use-short-answers t)            ; y/n instead of yes/no prompts
-
-(when (fboundp 'menu-bar-mode)   (menu-bar-mode -1))
-(when (fboundp 'tool-bar-mode)   (tool-bar-mode -1))
-(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+      use-short-answers t)
 
 (column-number-mode 1)
 (show-paren-mode 1)
-(global-display-line-numbers-mode 1)
-(setq display-line-numbers-type 'nil)
+(global-display-line-numbers-mode 0)
+(setq display-line-numbers-width-start t)  ; stops the gutter jittering as line counts change
 
-;; ---------- Editing ----------
-(setq-default indent-tabs-mode nil     ; spaces, not tabs
-              tab-width 4
-              fill-column 80)
+;; Faster redisplay for LTR-only text (drop bidi-display-reordering if you edit RTL text)
+(setq-default bidi-paragraph-direction 'left-to-right
+              bidi-display-reordering nil)
+(setq bidi-inhibit-bpa t)
 
-(electric-pair-mode 1)                 ; auto-close brackets and quotes
-(delete-selection-mode 1)              ; typing replaces the selected region
-(global-visual-line-mode 1)            ; wrap long lines at word boundaries
-(setq require-final-newline t)
+(setq highlight-nonselected-windows nil
+      cursor-in-non-selected-windows nil
+      read-process-output-max (* 1024 1024))  ; helps Eglot and terminal output
 
-(set-face-attribute 'default nil
-                    :family "Iosevka Nerd Font"
-                    :height 200)   ; 120 = 12pt; adjust to taste
+;; Remove: set-language-environment "UTF-8" (prefer-coding-system and
+;; set-default-coding-systems already cover it)
 
-;; Strip trailing whitespace on save
-(add-hook 'before-save-hook #'delete-trailing-whitespace)
-
-(use-package avy
-  :ensure t
-  :config
-  (global-set-key (kbd "C-:") 'avy-goto-char))
-
-(global-set-key (kbd "C-c l") #'org-store-link)
-(global-set-key (kbd "C-c a") #'org-agenda)
-(global-set-key (kbd "C-c c") #'org-capture)
-
-
-;; ---------- Files ----------
-(setq backup-directory-alist
-      `(("." . ,(expand-file-name "backups" user-emacs-directory)))
-      auto-save-file-name-transforms
-      `((".*" ,(expand-file-name "auto-saves/" user-emacs-directory) t))
-      make-backup-files t
-      version-control t
-      delete-old-versions t)
-
-(save-place-mode 1)                    ; reopen files at last position
-(recentf-mode 1)                       ; remember recently opened files
-(setq recentf-max-saved-items 100)
-(global-auto-revert-mode 1)            ; reload files changed on disk
-
-;; ---------- Minibuffer and history ----------
-(savehist-mode 1)                      ; persist minibuffer history
-(fido-vertical-mode 1)                 ; vertical completion list (Emacs 28+)
-(setq completion-ignore-case t
-      read-file-name-completion-ignore-case t)
-
-;; ---------- Encoding ----------
-(set-language-environment "UTF-8")
-(prefer-coding-system 'utf-8)
-(set-default-coding-systems 'utf-8)
-
-;; ---------- Misc ----------
-(setq sentence-end-double-space nil
-      mouse-yank-at-point t)
-
-;; ---------- Themes ----------
 (add-to-list 'custom-theme-load-path
              (expand-file-name "themes/" user-emacs-directory))
 (load-theme 'zhixu t)
 
-;; ---------- C and C++ ----------
-(setq c-default-style '((java-mode . "java")
-                        (awk-mode . "awk")
-                        (other . "k&r"))
-      c-basic-offset 4)
+;; ---------- Editing ----------
+;; Remove the font block; it now lives in early-init.el.
 
+;; ---------- Odin ----------
+(use-package odin-ts-mode
+  :vc "https://github.com/Sampie159/odin-ts-mode"
+  :mode "\\.odin\\'")
+;; Delete the duplicate add-to-list 'auto-mode-alist line; :mode already does this.
+
+;; ---------- C and C++ ----------
 (add-hook 'c-mode-common-hook
           (lambda ()
-            (c-set-offset 'case-label '+)   ; indent case labels inside switch
-            (setq-local indent-tabs-mode nil)))
+            (c-set-offset 'case-label '+)))   ; indent-tabs-mode is already nil globally
 
 ;; ---------- Rust ----------
-;; rust-ts-mode ships with Emacs 30+ but needs the tree-sitter grammar.
-;; Fall back to rust-mode (from MELPA) on older versions.
 (cond
  ((fboundp 'rust-ts-mode)
   (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode)))
  ((require 'rust-mode nil t)
   (setq rust-format-on-save t)))
 
-;; ---------- Prose ----------
-(add-hook 'text-mode-hook
+(defun my/eglot-format-on-save ()
+  "Format the buffer through Eglot before saving, if Eglot is active."
+  (when (eglot-managed-p)
+    (eglot-format-buffer)))
+(add-hook 'rust-ts-mode-hook
           (lambda ()
-            (visual-line-mode 1)
-            (setq-local word-wrap t)))
+            (add-hook 'before-save-hook #'my/eglot-format-on-save nil t)))
 
-(add-hook 'text-mode-hook #'flyspell-mode)  ; needs aspell or hunspell installed
+;; ---------- Prose ----------
+;; global-visual-line-mode already wraps text, so this hook is redundant.
+(add-hook 'text-mode-hook #'flyspell-mode)
 
-;; ---------- Language servers (optional) ----------
-;; Eglot is built in on Emacs 29+. Enable it per language:
-(add-hook 'c-mode-common-hook #'eglot-ensure)
-(add-hook 'rust-ts-mode-hook #'eglot-ensure)
+;; ---------- Packages ----------
+(use-package avy
+  :ensure t
+  :bind ("C-:" . avy-goto-char))   ; loads on first use
 
+;; (use-package ghostel
+;;   :ensure t
+;;   :init
+;;   (setq ghostel-shell "nu"))       ; :init runs before the package loads
 
-(provide 'init)
-;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages '(avy)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;; ---------- IRC ----------
+(require 'cl-lib)
+
+;; One entry per network. Edit these to match your servers.
+(defvar my/irc-networks
+  '((:name "libera"                    ; short label used in the prompt and auth-source
+     :host "irc.libera.chat"           ; server hostname
+     :port 6697                        ; CHANGE: 6697 for TLS, 6667 for plain
+     :tls t                            ; CHANGE: t for TLS, nil for plain
+     :nick "raelie"                  ; CHANGE: your nick on this network
+     :nickserv t                       ; t if you identify with NickServ
+     :channels ("#emacs"))             ; CHANGE: channels to join on connect
+
+    (:name "astatin"
+     :host "irc.astatin.live"
+     :port 6697                        ; CHANGE: ask the server owner
+     :tls t                            ; CHANGE: ask the server owner
+     :nick "raequ"                  ; CHANGE
+     :nickserv t
+     :channels ("#channel")))          ; CHANGE
+  "IRC networks to connect to with `my/irc'.")
+
+(defun my/irc-secret (host user)
+  "Return the password for HOST and USER from auth-source, or nil."
+  (let* ((entry (car (auth-source-search :host host :user user :max 1)))
+         (secret (plist-get entry :secret)))
+    (if (functionp secret) (funcall secret) secret)))
+
+(defun my/irc-connect (net)
+  "Connect to the network described by the plist NET."
+  (let* ((host (plist-get net :host))
+         (nick (plist-get net :nick))
+         (pass (and (plist-get net :nickserv) (my/irc-secret host nick))))
+    (when pass
+      (add-to-list 'rcirc-authinfo
+                   (list (regexp-quote host) 'nickserv nick pass)))
+    (rcirc-connect host (plist-get net :port) nick nil nil nil
+                   (plist-get net :channels)
+                   (and (plist-get net :tls) 'tls))))
+
+(defun my/irc (name)
+  "Connect to the network called NAME in `my/irc-networks'."
+  (interactive
+   (list (completing-read "IRC network: "
+                          (mapcar (lambda (n) (plist-get n :name)) my/irc-networks)
+                          nil t)))
+  (my/irc-connect
+   (cl-find name my/irc-networks
+            :key (lambda (n) (plist-get n :name))
+            :test #'string=)))
+
+(defun my/irc-connect-all ()
+  "Connect to every network in `my/irc-networks'."
+  (interactive)
+  (mapc #'my/irc-connect my/irc-networks))
+
+(keymap-global-set "C-c i" #'my/irc)
+(keymap-global-set "C-c I" #'my/irc-connect-all)
+
+(with-eval-after-load 'rcirc
+  (setq rcirc-time-format "%H:%M "
+        rcirc-omit-responses '("JOIN" "PART" "QUIT" "NICK" "AWAY" "MODE")
+        rcirc-keywords '("yournick")               ; CHANGE: words that highlight
+        rcirc-log-flag t                           ; nil to turn logging off
+        rcirc-log-directory (expand-file-name "irc-logs" user-emacs-directory))
+  (add-hook 'rcirc-mode-hook #'rcirc-omit-mode)    ; C-c o toggles join/part noise
+  (rcirc-track-minor-mode 1))                      ; unread counts in the mode line
